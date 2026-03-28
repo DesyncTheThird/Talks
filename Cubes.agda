@@ -1,5 +1,3 @@
-{-# OPTIONS --cubical --guardedness -WnoUnsupportedIndexedMatch #-}
-
 module Cubes where
 
 ------------------------------------------------------------------------------
