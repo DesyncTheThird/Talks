@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical --safe --guardedness -WnoUnsupportedIndexedMatch #-}
+{-# OPTIONS --cubical --guardedness -WnoUnsupportedIndexedMatch #-}
 
 module Talks.Cubes where
 
@@ -50,7 +50,8 @@ open import Cubical.Foundations.Function
 open import Cubical.Functions.Embedding
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Univalence
-open import Cubical.HITs.SetTruncation hiding (rec)
+-- import Cubical.HITs.SetTruncation as STrunc
+import Cubical.HITs.PropositionalTruncation as PTrunc
 import Cubical.Functions.Logic as L
 open import Cubical.Data.Sigma
 open import Cubical.Data.Nat
@@ -65,60 +66,6 @@ variable
   A B C : Type ℓ
 
 ------------------------------------------------------------------------------
-
-
-
-
-
-
-------------------------------------------------------------------------------
--- Homotopy Type Theory
-------------------------------------------------------------------------------
-
--- funExt : (f g : A → B) → ((x : A) → f x ≡ g x) → f ≡ g
--- funExt = funExt
-
--- ua : A ≃ B → A ≡ B
--- ua = {!!}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-------------------------------------------------------------------------------
--- Points, Lines, Squares, Cubes...
-------------------------------------------------------------------------------
-
--- TODO
-
-
-
-
-
-
-
-
-------------------------------------------------------------------------------
--- Lists, Vectors
-
-
-
-
-
-
 
 
 ------------------------------------------------------------------------------
@@ -150,56 +97,84 @@ module Circle where
       rec : (x : S¹) → P
       rec = ind (λ _ → P) base* loop*
 
+  twist : S¹ → S¹
+  twist base = base
+  twist (loop i) = loop (~ i)
+
+  twist² : (x : S¹) → twist (twist x) ≡ x
+  twist² base = refl
+  twist² (loop i) = refl
+
+
+
   data ℤ : Type where
     pos : ℕ → ℤ
     neg : ℕ → ℤ
     zero : pos 0 ≡ neg 0
 
-  -- succ : ℤ → ℤ
-  -- succ (pos n) = pos (suc n)
-  -- succ (neg 0) = pos 1
-  -- succ (neg (suc n)) = neg n
-  -- succ (zero i) = pos 1
+  succ : ℤ → ℤ
+  succ (pos n) = pos (suc n)
+  succ (neg 0) = pos 1
+  succ (neg (suc n)) = neg n
+  succ (zero i) = pos 1
 
-  -- pred : ℤ → ℤ
-  -- pred (pos 0) = neg 1
+  pred : ℤ → ℤ
+  pred (pos 0) = neg 1
+  pred (pos (suc n)) = pos n
+  pred (neg n) = neg (suc n)
+  pred (zero i) = neg 1
+
+  -- pred zero = neg 0
+  -- pred (pos 0) = zero
   -- pred (pos (suc n)) = pos n
   -- pred (neg n) = neg (suc n)
-  -- pred (zero i) = neg 1
 
-  -- -- pred zero = neg 0
-  -- -- pred (pos 0) = zero
-  -- -- pred (pos (suc n)) = pos n
-  -- -- pred (neg n) = neg (suc n)
+  predSucc : (n : ℤ) → pred (succ n) ≡ n
+  predSucc (pos n) = refl
+  predSucc (neg 0) = zero
+  predSucc (neg (suc x)) = refl
+  predSucc (zero i) j = zero (i ∧ j)
 
-  -- predSucc : (n : ℤ) → pred (succ n) ≡ n
-  -- predSucc (pos n) = refl
-  -- predSucc (neg 0) = zero
-  -- predSucc (neg (suc x)) = refl
-  -- predSucc (zero i) j = zero (i ∧ j)
+  succPred : (n : ℤ) → succ (pred n) ≡ n
+  succPred (pos 0) = sym zero
+  succPred (pos (suc n)) = refl
+  succPred (neg n) = refl
+  succPred (zero i) j = zero (i ∨ ~ j)
 
-  -- succPred : (n : ℤ) → succ (pred n) ≡ n
-  -- succPred (pos 0) = sym zero
-  -- succPred (pos (suc n)) = refl
-  -- succPred (neg n) = refl
-  -- succPred (zero i) j = zero (i ∨ ~ j)
+  succEquiv : ℤ ≃ ℤ
+  succEquiv = isoToEquiv (iso succ pred succPred predSucc)
 
-  -- succEquiv : ℤ ≃ ℤ
-  -- succEquiv = isoToEquiv (iso succ pred succPred predSucc)
+  cover : ℤ → (base ≡ base)
+  cover (pos zero) = refl
+  cover (pos (suc x)) = loop ∙ cover (pos x)
+  cover (neg zero) = refl
+  cover (neg (suc x)) = loop ⁻¹ ∙ cover (neg x)
+  cover (zero i) = refl
 
-  -- cover : ℤ → (base ≡ base)
-  -- cover (pos zero) = refl
-  -- cover (pos (suc x)) = loop ∙ cover (pos x)
-  -- cover (neg zero) = refl
-  -- cover (neg (suc x)) = loop ⁻¹ ∙ cover (neg x)
-  -- cover (zero i) = refl
+  code : S¹ → Type
+  code base = ℤ
+  code (loop i) = ua succEquiv i
 
-  -- code : S¹ → Type
-  -- code base = ℤ
-  -- code (loop i) = ua succEquiv i
+  encode : (x : S¹) → (base ≡ x) → code x
+  encode x p = tpt code p (pos 0)
 
-  -- encode : (x : S¹) → (base ≡ x) → code x
-  -- encode x p = tpt code p (pos 0)
+  rep : ∀ {a} → (p : a ≡ a) → ℤ → a ≡ a
+  rep p (pos zero) = p
+  rep p (pos (suc x)) = p ∙ rep p (pos x)
+  rep p (neg zero) = sym p
+  rep p (neg (suc x)) = sym p ∙ rep p (neg x) 
+  rep p (zero i) = refl
+
+  count : (n : ℤ) → encode base (rep loop n) ≡ n
+  count (pos zero) = refl
+  count (pos (suc x)) = {!tpt !}
+  count (neg zero) = refl
+  count (neg (suc x)) = {!!}
+  count (zero i) = λ _ → zero i
+
+
+  n : ℤ
+  n = {! encode base loop !}
 
   -- encodeDecode : (x : S¹) → (p : base ≡ x) → {!!}
   -- encodeDecode = {!!}
@@ -213,18 +188,6 @@ module Circle where
 
   -- pi1 : ΩS¹ ≃ ℤ
   -- pi1 = isoToEquiv (iso (encode base) cover decodeEncode {!encodeDecode!})
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   data T² : Type where
@@ -294,14 +257,34 @@ module Circle where
 
 
 
-  -- Ω : Σ (Type ℓ) (λ X → X) → Type ℓ
-  -- Ω (X , x) = x ≡ x
+  Ω : Σ (Type ℓ) (λ X → X) → Type ℓ
+  Ω (X , x) = x ≡ x
 
   -- π₁ : Σ (Type ℓ) (λ X → X) → Type ℓ
   -- π₁ (X , x) = ∥ Ω (X , x) ∥₂
 
-  -- ΩX≃S¹→X : ((X , x) : Σ (Type ℓ) (λ X → X)) → Ω (X , x) ≃ Σ (S¹ → X) (λ f → f base ≡ x)
-  -- ΩX≃S¹→X (X , x) = isoToEquiv (iso l2f f2l f2l2f l2f2l) -- () , {!!}
+  S¹Univ : (X : Type ℓ) → (S¹ → X) ≃ Σ X (λ x → Ω (X , x))
+  S¹Univ X = isoToEquiv (iso f2l l2f f2l2f l2f2l)
+    where
+      f2l : (S¹ → X) → Σ X (λ x → Ω (X , x))
+      f2l f = (f base) , ap f loop
+      l2f : Σ X (λ x → Ω (X , x)) → S¹ → X
+      l2f (x , p) base = x
+      l2f (x , p) (loop i) = p i
+      f2l2f : ∀ x → f2l (l2f x) ≡ x
+      f2l2f (x , p) = refl
+      l2f2l : ∀ f → l2f (f2l f) ≡ f
+      l2f2l f i base = f base
+      l2f2l f i (loop j) = f (loop j)
+
+
+
+
+
+
+
+  -- ((X , x) : Σ (Type ℓ) (λ X → X)) → Ω (X , x) ≃ Σ (S¹ → X) (λ f → f base ≡ x)
+  -- ΣΩX≃S¹→X (X , x) = isoToEquiv (iso l2f f2l f2l2f l2f2l) -- () , {!!}
   --   where
   --     l2f : x ≡ x → Σ (S¹ → X) (λ f → f base ≡ x)
   --     l2f p = S¹Elim.rec X x p , p
@@ -560,6 +543,18 @@ module CMonoid where
   η : ∀ {a} {A : Type a} → A → SList A
   η a = [ a ]
 
+  postulate
+    aaaa : (x : hProp ℓ) → (⊥* , isProp⊥*) L.⊔ x ≡ x
+
+  hPropWSMon : ∀ {ℓ} → WSMon (hProp ℓ)
+  hPropWSMon .e = (⊥* , isProp⊥*)
+  hPropWSMon ._⊕_ = L._⊔_
+  hPropWSMon .unitl = aaaa
+  hPropWSMon .assocr = λ x y z → (sym (L.⊔-assoc x y z))
+  hPropWSMon .comm = L.⊔-comm
+  hPropWSMon .hLevel = isSetHProp
+
+
   module _ {a m} {A : Type a} {M : Type m} (M* : WSMon M) where
     private
       module M = WSMon M*
@@ -572,6 +567,9 @@ module CMonoid where
 
     [_]_♯ = sharp
 
+    sharpCons : ∀ x xs → {f : A → M} → sharp f (x ∷ xs) ≡ f x M.⊕ sharp f xs
+    sharpCons x xs = refl
+
     module _ (h* : WSMonHom SListWSMon M*) (f : A → M) where
       private
         module h = WSMonHom h*
@@ -583,18 +581,29 @@ module CMonoid where
 
       [_]_♯-uniq = sharp-uniq
 
-
   module Mem {a} {A : Type a} where
     infix 5 _∈[_]_
-    _∈[_]_ : A → isSet A →  SList A → hProp a
-    x ∈[ ϕ ] xs = SListElim.rec (hProp _)
-      L.⊤
-      (λ a h → ((a ≡ x) , ϕ a x) L.⊔ h)
-      (λ a b h → L.⊔-assoc ((a ≡ x) , ϕ a x) ((b ≡ x) , ϕ b x) h
-               ∙∙ ap (L._⊔ h) (L.⊔-comm ((a ≡ x) , ϕ a x) ((b ≡ x) , ϕ b x))
-               ∙∙ sym (L.⊔-assoc ((b ≡ x) , ϕ b x) ((a ≡ x) , ϕ a x) h))
-      isSetHProp
-      xs
+    _∈[_]_ : A → isSet A → SList A → hProp a
+    x ∈[ ϕ ] xs = [ hPropWSMon ] (λ a → ((a ≡ x) , ϕ a x)) ♯ xs
+
+
+      -- SListElim.rec (hProp _)
+      -- (⊥* , isProp⊥*)
+      -- (λ a h → ((a ≡ x) , ϕ a x) L.⊔ h)
+      -- (λ a b h → L.⊔-assoc ((a ≡ x) , ϕ a x) ((b ≡ x) , ϕ b x) h
+      --          ∙∙ ap (L._⊔ h) (L.⊔-comm ((a ≡ x) , ϕ a x) ((b ≡ x) , ϕ b x))
+      --          ∙∙ sym (L.⊔-assoc ((b ≡ x) , ϕ b x) ((a ≡ x) , ϕ a x) h))
+      -- isSetHProp
+      -- xs
+
+    memNil : ∀ x ϕ → ⟨ x ∈[ ϕ ] [] ⟩ → ⊥*
+    memNil x ϕ = λ x → x
+
+    memCons : ∀ x y xs ϕ → ⟨ x ∈[ ϕ ] (y ∷ xs) ⟩ → ⟨ ((y ≡ x) , ϕ y x) L.⊔ (x ∈[ ϕ ] xs) ⟩
+    memCons x y xs ϕ p =
+      let q : (x ∈[ ϕ ] (y ∷ xs)) ≡ ((y ≡ x) , ϕ y x) L.⊔ (x ∈[ ϕ ] xs)
+          q = sharpCons hPropWSMon y xs {f = (λ a → ((a ≡ x) , ϕ a x)) }
+      in tpt (λ x → x) (ap ⟨_⟩ q) p
 
   record isHead {a} {A : Type a} (ϕ : isSet A) (h : SList A → 𝟙 ⊎ A) : Type a where
     open Mem
@@ -603,21 +612,45 @@ module CMonoid where
       onCons : ∀ x xs → Σ A λ a → (h (x ∷ xs) ≡ inr a)
       isMem : ∀ x xs → ⟨ onCons x xs .fst ∈[ ϕ ] (x ∷ xs) ⟩
 
-    -- isPropOnCons : isProp (∀ x xs → Σ A λ a → (h (x ∷ xs) ≡ inr a) × fst (a ∈[ ϕ ] (x ∷ xs)))
-    -- isPropOnCons = isPropΠ2 λ { x xs (a₁ , φ) (a₂ , ϑ) →
-    --   ΣPathPProp (λ a → isProp× (isSet⊎ isSetUnit ϕ (h (x ∷ xs)) (inr a)) (snd (a ∈[ ϕ ] x ∷ xs)))
-    --              (isEmbedding→Inj isEmbedding-inr a₁ a₂ (sym (φ .fst) ∙ ϑ .fst)) }
 
-    -- _⊓_ : A → A → A
-    -- a ⊓ b = onCons a [ b ] .fst
 
-    -- ⊓-comm : ∀ a b → a ⊓ b ≡ b ⊓ a
-    -- ⊓-comm a b =
-    --   let p : h [ a ⸴ b ] ≡ h [ b ⸴ a ] ; p = ap h (swap a b [])
-    --       q : inr (onCons a [ b ] .fst) ≡ h [ a ⸴ b ] ; q = sym (onCons a [ b ] .snd .fst)
-    --       r : inr (onCons b [ a ] .fst) ≡ h [ b ⸴ a ] ; r = sym (onCons b [ a ] .snd .fst)
-    --   in isEmbedding→Inj isEmbedding-inr (a ⊓ b) (b ⊓ a) (q ∙∙ p ∙∙ sym r)
+    isPropOnCons : isProp (∀ x xs → Σ A λ a → (h (x ∷ xs) ≡ inr a) × fst (a ∈[ ϕ ] (x ∷ xs)))
+    isPropOnCons = isPropΠ2 λ { x xs (a₁ , φ) (a₂ , ϑ) →
+      ΣPathPProp (λ a → isProp× (isSet⊎ isSetUnit ϕ (h (x ∷ xs)) (inr a)) (snd (a ∈[ ϕ ] x ∷ xs)))
+                 (isEmbedding→Inj isEmbedding-inr a₁ a₂ (sym (φ .fst) ∙ ϑ .fst)) }
 
+    _⊓_ : A → A → A
+    a ⊓ b = onCons a [ b ] .fst
+
+    ⊓-comm : ∀ a b → a ⊓ b ≡ b ⊓ a
+    ⊓-comm a b =
+      let p : h [ a ⸴ b ] ≡ h [ b ⸴ a ] ; p = ap h (swap a b [])
+          q : inr (onCons a [ b ] .fst) ≡ h [ a ⸴ b ] ; q = sym (onCons a [ b ] .snd)
+          r : inr (onCons b [ a ] .fst) ≡ h [ b ⸴ a ] ; r = sym (onCons b [ a ] .snd)
+      in isEmbedding→Inj isEmbedding-inr (a ⊓ b) (b ⊓ a) (q ∙ p ∙ sym r)
+
+    h-η : ∀ a b → ⟨ ((h [ a ⸴ b ] ≡ inr a) , isSet⊎ isSetUnit ϕ _ _) L.⊔ ((h [ a ⸴ b ] ≡ inr b) , isSet⊎ isSetUnit ϕ _ _) ⟩
+    h-η a b =
+      let x = h [ a ⸴ b ]
+          y : A
+          y = onCons a [ b ] .fst
+          q : x ≡ inr y
+          q = onCons a [ b ] .snd
+          p : ⟨ y ∈[ ϕ ] [ a ⸴ b ] ⟩
+          p = isMem a [ b ]
+          r : ⟨ ((a ≡ y) , ϕ a y) L.⊔ (((b ≡ y), ϕ b y) L.⊔ (⊥* , isProp⊥*)) ⟩
+          r = memCons y a [ b ] ϕ p
+          s : ⟨ ((a ≡ y) , ϕ a y) L.⊔ ((b ≡ y), ϕ b y) ⟩
+          s = {!!}
+      in PTrunc.map (λ { (inl x) → inl (q ∙ ap inr (sym x)) ; (inr x) → inr (q ∙ ap inr (sym x))}) s
+
+
+-- ⊔-elim : (P : hProp ℓ) (Q : hProp ℓ') (R : ⟨ P ⊔ Q ⟩ → hProp ℓ'')
+--   → (∀ x → ⟨ R (inl x) ⟩) → (∀ y → ⟨ R (inr y) ⟩) → (∀ z → ⟨ R z ⟩)
+
+
+    ⊓-assoc : ∀ a b c → (a ⊓ b) ⊓ c ≡ a ⊓ (b ⊓ c)
+    ⊓-assoc a b c = {!!}
 
   -- head : ∀ {a} {A : Type a} → List A → 𝟙 ⊎ A
   -- head {A = A} = [ 𝟙+⟨ A ⟩-WSMon ] inr ♯
