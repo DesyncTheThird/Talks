@@ -30,7 +30,7 @@ variable
 ------------------------------------------------------------------------------
 {-
 
-I : Type
+I is the interval
 
 i0 i1 : I
 
@@ -63,34 +63,31 @@ PathP : {ℓ : Level} (A : I → Type ℓ) → A i0 → A i1 → Type ℓ
 
 -}
 
-
-
-
 -- `refl a` is the constant path I → A at a
 refl : (a : A) → a ≡ a
-refl a i = a
+refl a = {!!}
 
 -- sym p is the path p in reverse
 sym : {a b : A} → a ≡ b → b ≡ a
-sym p i = p (~ i)
+sym p = {!!}
 
 -- what about transitivity?
 
 
 -- funExt is pointwise equality of functions
 funExt : {f g : A → B} → ((x : A) → f x ≡ g x) → f ≡ g
-funExt α i x = α x i
+funExt α = {!!}
 
 -- ap applies a path to a function
 ap : {a b : A} → (f : A → B) → (p : a ≡ b) → f a ≡ f b
-ap f p i = f (p i)
+ap f p = {!!}
 
 -- apd applies a dependent path to a function
 apd : {B : A → Type ℓ}
   → (f : (x : A) → B x)
   → {a b : A} → (p : a ≡ b)
   → PathP (λ i → B (p i)) (f a) (f b)
-apd f p i = f (p i)
+apd f p = {!!}
 
 
 
@@ -165,12 +162,8 @@ module Squares where
 
   lid : (p : a ≡ b) (q : c ≡ d) (r : a ≡ c)
     → b ≡ d
-  lid p q r i =
-    hcomp (λ j → λ { (i = i0) → p j
-                   ; (i = i1) → q j })
-          (r i)
-
-
+  lid p q r =
+    {!!}
 
 
 
@@ -180,19 +173,19 @@ module Squares where
 ------------------------------------------------------------------------------
 
   const-i : (p : a ≡ b) → Square p p (refl a) (refl b)
-  const-i p i j = p j
+  const-i p i j = {!!}
 
   lower : (p : a ≡ b) → Square p (refl b) p (refl b)
-  lower p i j = p (i ∨ j)
+  lower p i j = {!!}
 
   upper : (p : a ≡ b) → Square (refl a) p (refl a) p
-  upper p i j = p (i ∧ j)
+  upper p i j = {!!}
 
   left : (p : a ≡ b) → Square (refl a) (sym p) p (refl a)
-  left p i j = p (i ∧ ~ j)
+  left p i j = {!!}
 
   right : (p : a ≡ b) → Square p (refl a) (refl a) (sym p)
-  right p i j = p (~ i ∧ j)
+  right p i j = {!!}
 
 
 
@@ -200,31 +193,19 @@ module Squares where
 
   symmetricSquare : (p : a ≡ b) → (q : b ≡ c) → Square p q p q
   symmetricSquare p q i j =
-    hcomp (λ k →
-      λ { (i = i0) → p (j ∨ ~ k)
-      ; (i = i1) → q j
-      ; (j = i0) → p (i ∨ ~ k)
-      ; (j = i1) → q i
-    })
-    (q (i ∧ j))
-
+    {!!}
 
 
 
   filler : (p : a ≡ b) (q : c ≡ d) (r : a ≡ c)
     → Square p q r (lid p q r)
   filler p q r i j =
-    hcomp (λ k → (λ { (i = i0) → p (j ∧ k)
-                    ; (i = i1) → q (j ∧ k)
-                    ; (j = i0) → r i
-                    -- ; (j = i1) → filler p q r i k -- recursive sorcery
-                    }))
-          (r i)
+    {!!}
 
   infixr 5 _∙_
 
   _∙_ : a ≡ b → b ≡ c → a ≡ c
-  r ∙ q = lid (refl (r i0)) q r
+  r ∙ q = {!!}
 
 
 

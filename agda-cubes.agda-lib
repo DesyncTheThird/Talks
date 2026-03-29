@@ -1,4 +1,4 @@
 name: agda-cubes
 depend: cubical
 include: .
-flags: --cubical --guardedness --safe -WnoUnsupportedIndexedMatch
+flags: --cubical --guardedness -WnoUnsupportedIndexedMatch --allow-unsolved-metas

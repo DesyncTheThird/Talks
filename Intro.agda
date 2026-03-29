@@ -31,38 +31,41 @@ infixr 30 _∙_
 -- Dependent Types
 ------------------------------------------------------------------------------
 
-module _ where
-  open import Cubical.Data.Unit renaming (Unit to 𝟙 ; tt to ⋆)
-  open import Cubical.Data.Sum
-  open import Cubical.Data.Nat
-  open import Cubical.Data.Bool
+open import Cubical.Data.Unit renaming (Unit to 𝟙 ; tt to ⋆)
+open import Cubical.Data.Sum
+open import Cubical.Data.Nat
+open import Cubical.Data.Bool
 
-  f : ℕ → Bool
-  f n = true
+foo : ℕ → Bool
+foo n = isEven n
 
-  g : (n : ℕ) → if isEven n then ℕ else Bool
-  g zero = zero
-  g (suc zero) = true
-  g (suc (suc n)) = g n
+bar : (n : ℕ) → if isEven n then ℕ else Bool
+bar zero = zero
+bar (suc zero) = false
+bar (suc (suc n)) = bar n
 
-  module Lists where
+module Lists where
 
-    data List {ℓ} (A : Type ℓ) : Type ℓ where
-      []  : List A
-      _∷_ : A → List A → List A
+  data List {ℓ} (A : Type ℓ) : Type ℓ where
+    []  : List A
+    _∷_ : A → List A → List A
 
-    head : {A : Type ℓ} → List A → 𝟙 ⊎ A
-    head [] = inl ⋆
-    head (x ∷ xs) = inr x
+  head : {A : Type ℓ} → List A → 𝟙 ⊎ A
+  head [] = inl ⋆
+  head (x ∷ xs) = inr x
 
-  module Vectors where
+module Vectors where
 
-    data Vec {ℓ} (A : Type ℓ) : ℕ → Type ℓ where
-      []  : Vec A zero
-      _∷_ : {n : ℕ} → A → Vec A n → Vec A (suc n)
+  data Vec {ℓ} (A : Type ℓ) : ℕ → Type ℓ where
+    []  : Vec A zero
+    _∷_ : {n : ℕ} → A → Vec A n → Vec A (suc n)
 
-    head : {A : Type ℓ} {n : ℕ} → Vec A (suc n) → A
-    head (x ∷ xs) = x
+  head : {A : Type ℓ} {n : ℕ} → Vec A (suc n) → A
+  head (x ∷ xs) = x
+
+
+
+
 
 
 {-
@@ -110,11 +113,11 @@ reflexivity : {a : A} → a ≡ a
 reflexivity = refl
 
 sym : {a b : A} → a ≡ b → b ≡ a
-sym refl = refl
+sym p = {!!}
 -- sym {a = a} {b} = J (λ x y p → y ≡ x) (λ x → refl) a b
 
 _∙_ : ∀ {ℓ} {A : Type ℓ} → {a b c : A} → a ≡ b → b ≡ c → a ≡ c
-refl ∙ p = p
+p ∙ q = {!!}
 -- trans {A = A} {a = a} {b} {c} p = J (λ x y q → (c : A) → y ≡ c → x ≡ c) (λ x c p → p) a b p c
 
 ------------------------------------------------------------------------------
@@ -141,10 +144,10 @@ Types are infinity groupoids:
 module _ {a b : A} where
 
   unitr : (p : a ≡ b) → (p ∙ refl) ≡ p
-  unitr refl = refl
+  unitr p = {!!}
 
   sym² : (p : a ≡ b) → sym (sym p) ≡ p
-  sym² refl = refl
+  sym² p = {!!}
 
 module _ {a b c d : A} where
 

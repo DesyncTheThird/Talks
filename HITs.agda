@@ -32,8 +32,8 @@ variable
 module Int where
 
   data ℤ : Type where
-    pos : ℕ → ℤ
-    neg : ℕ → ℤ
+    pos : (n : ℕ) → ℤ
+    neg : (n : ℕ) → ℤ
     zero : pos 0 ≡ neg 0
 
 
@@ -60,7 +60,7 @@ module Int where
   predSucc : (n : ℤ) → pred (succ n) ≡ n
   predSucc (pos n) = refl
   predSucc (neg 0) = zero
-  predSucc (neg (suc x)) = refl
+  predSucc (neg (suc n)) = refl
   predSucc (zero i) j = zero (i ∧ j)
 
   succPred : (n : ℤ) → succ (pred n) ≡ n
@@ -121,9 +121,9 @@ module Circle where
   S¹Univ : (X : Type ℓ) → (S¹ → X) ≃ Σ X (λ x → Ω (X , x))
   S¹Univ X = isoToEquiv (iso f2l l2f f2l2f l2f2l)
     where
-      f2l : (S¹ → X) → Σ X (λ x → Ω (X , x))
+      f2l : (S¹ → X) → Σ X (λ x → x ≡ x)
       f2l f = (f base) , ap f loop
-      l2f : Σ X (λ x → Ω (X , x)) → S¹ → X
+      l2f : Σ X (λ x → x ≡ x) → S¹ → X
       l2f (x , p) base = x
       l2f (x , p) (loop i) = p i
       f2l2f : ∀ x → f2l (l2f x) ≡ x
@@ -136,6 +136,17 @@ module Circle where
 
   {- involution on S¹ -}
 
+  _^_ : ∀ {a : A} → (p : a ≡ a) → ℤ → a ≡ a
+  p ^ (pos 0) = refl
+  p ^ (pos (suc x)) = (p ^ (pos x)) ∙ p
+  p ^ (neg 0) = refl
+  p ^ (neg (suc x)) = (p ^ (neg x)) ∙ sym p
+  p ^ (zero i) = refl
+
+  rotate : ℤ → S¹ → S¹
+  rotate n base = base
+  rotate n (loop i) = (loop ^ n) i
+
   twist : S¹ → S¹
   twist base = base
   twist (loop i) = loop (~ i)
@@ -145,16 +156,7 @@ module Circle where
   twist² (loop i) = refl
 
 
-
-
   {- universal cover of S¹ -}
-
-  cover : ℤ → (base ≡ base)
-  cover (pos zero) = refl
-  cover (pos (suc x)) = loop ∙ cover (pos x)
-  cover (neg zero) = refl
-  cover (neg (suc x)) = loop ⁻¹ ∙ cover (neg x)
-  cover (zero i) = refl
 
   code : S¹ → Type
   code base = ℤ
@@ -167,15 +169,6 @@ module Circle where
 
   winding : (base ≡ base) → ℤ
   winding = encode base
-
-  _^_ : ∀ {a : A} → (p : a ≡ a) → ℤ → a ≡ a
-  p ^ (pos 0) = refl
-  p ^ (pos (suc x)) = (p ^ (pos x)) ∙ p
-  p ^ (neg 0) = refl
-  p ^ (neg (suc x)) = (p ^ (neg x)) ∙ sym p
-  p ^ (zero i) = refl
-
-
 
   _ : winding (loop ^ (pos 4)) ≡ pos 4
   _ = refl
@@ -212,21 +205,21 @@ module CW where
     base : T²
     loop1 : base ≡ base
     loop2 : base ≡ base
-    filler : Square loop1 loop1 loop2 loop2
-        -- loop1 ∙ loop2 ≡ loop2 ∙ loop1
+    surf : Square loop1 loop1 loop2 loop2
+           -- loop1 ∙ loop2 ≡ loop2 ∙ loop1
 
   data K² : Type where
     base : K²
     loop1 : base ≡ base
     loop2 : base ≡ base
-    filler : Square loop1 loop2 (sym loop1) loop2
-        -- loop1 ∙ loop2 ∙ loop1 ≡ loop2
+    surf : Square loop1 loop2 (sym loop1) loop2
+           -- loop1 ∙ loop2 ∙ loop1 ≡ loop2
 
   data RP² : Type where
     base : RP²
     loop : base ≡ base
     loop² : Square loop refl refl loop
-        -- loop ∙ loop = refl
+          -- loop ∙ loop = refl
 
 
 
@@ -239,13 +232,13 @@ module CW where
   c2t (base , base) = base
   c2t (loop i , base) = loop1 i
   c2t (base , loop j) = loop2 j
-  c2t (loop i , loop j) = filler j i
+  c2t (loop i , loop j) = surf j i
 
   t2c : T² → (S¹ × S¹)
   t2c base = (base , base)
   t2c (loop1 i) = (loop i , base)
   t2c (loop2 i) = (base , loop i)
-  t2c (filler i j) = (loop j) , (loop i)
+  t2c (surf i j) = (loop j) , (loop i)
 
   c2t2c : (x : S¹ × S¹) → t2c (c2t x) ≡ x
   c2t2c (base , base) = refl
@@ -257,7 +250,7 @@ module CW where
   t2c2t base = refl
   t2c2t (loop1 i) = refl
   t2c2t (loop2 i) = refl
-  t2c2t (filler i j) = refl
+  t2c2t (surf i j) = refl
 
   t=c : S¹ × S¹ ≃ T²
   t=c = isoToEquiv (iso c2t t2c t2c2t c2t2c)
